@@ -15,8 +15,6 @@
 ## * use analytic solution if available?
 
 ## Doesn't hurt the make project, helps people who are sourcing
-require(deSolve)
-require(ggplot2)
 theme_set(theme_bw())
 
 namedList <- function(...) {
@@ -27,8 +25,6 @@ namedList <- function(...) {
     setNames(L,nm)
 }
 
-# Device ask should be true if device is interactive
-## options(device.ask.default=grDevices::dev.interactive(orNone = TRUE))
 respPlot <- function(pop, b, d, lpos, ylab,
                      plab="Population size", title="",
                      plotDiff=FALSE,
@@ -118,7 +114,7 @@ ndot <- function(time, vars, parms){
 }
 
 popSim <- function (N0, MaxTime, steps, parms){
-    sim <- as.data.frame(lsoda(
+    sim <- as.data.frame(ode(
         y = c(n=log(N0)),
         times = (0:steps)*MaxTime/steps,
         func = ndot,
@@ -151,23 +147,36 @@ popSim <- function (N0, MaxTime, steps, parms){
 #' @param title
 #' @param tlab label for time axis
 #' @param plab label for population size axis
-#' @param returnPlotList return list of plots rather than printing plots?
+#' @param printPlots print plots (alternatively, return a list of plots)?
 #' @param plotType "ggplot2" or "base"
 #' @param logScale make y-axis logarithmic (for time dynamics)?
-bd <- function(N0=NULL, MaxTime=20, steps=100, popMax=100, popSteps=100,
-               b0=1, bDD=NULL, bAllee=NULL, d0=0.5, dDD=NULL,
-               dAllee=NULL,
+bd <- function(N0=NULL,
+               MaxTime=20, steps=100,
+               popMax=100, popSteps=100,
+               b0=1, bDD=NULL, bAllee=NULL,
+               d0=0.5, dDD=NULL, dAllee=NULL,
                reportPcTotal="b",
                reportSim=FALSE,
                reportDiff=FALSE,
-               fontSize=1,
-               legendSize=1, title="",
+               title="",
                tlab = "Time (years)", plab="Population size",
-               returnPlotList=FALSE,
-               plotType="ggplot",
-               logScale=FALSE) {
+               logScale=FALSE,
+               fontSize=1,
+               legendSize=1,
+               printPlots=TRUE,
+               plotType="ggplot"
+               ) {
+
+    ## Device ask should be true if device is interactive
+    if (printPlots) {
+        oldask <- par("ask")
+        on.exit(par(ask=oldask))
+        par(ask=grDevices::dev.interactive(orNone = TRUE))
+    }
 
     plotList <- NULL
+
+    ## BMB: ???
     pop <- 1:popSteps*(popMax/popSteps)
 
     b <- rfun(b0, bDD, bAllee, pop, TRUE)
@@ -180,10 +189,11 @@ bd <- function(N0=NULL, MaxTime=20, steps=100, popMax=100, popSteps=100,
                                  plotType=plotType,
                                  reportDiff=reportDiff)
         if (plotType=="ggplot") {
-            if (returnPlotList) plotList <- c(plotList,
-                                              namedList(plot_pc_demog))
-            else print(plot_pc_demog)
-            
+            if (printPlots) {
+                print(plot_pc_demog)
+            } else { plotList <- c(plotList,
+                                   namedList(plot_pc_demog))
+                 }
         }
     }
     
@@ -193,9 +203,11 @@ bd <- function(N0=NULL, MaxTime=20, steps=100, popMax=100, popSteps=100,
                                     legendSize=legendSize, plab=plab,
                                     plotType=plotType,
                                     reportDiff=reportDiff)
-        if (returnPlotList) plotList <- c(plotList,
-                                          namedList(plot_total_demog))
-        else print(plot_total_demog)
+        if (printPlots) {print(plot_total_demog)
+                     } else {
+                         plotList <- c(plotList,
+                                       namedList(plot_total_demog))
+                     }
     }
 
     if(!is.null(N0)){
@@ -203,25 +215,34 @@ bd <- function(N0=NULL, MaxTime=20, steps=100, popMax=100, popSteps=100,
         
         if (reportSim) {
             if (plotType=="base") {
+                ylim <- range(sim$N)
+                if (!logScale) ylim[1] <- 0
                 plot(sim$time, sim$N,
                      cex.lab=fontSize, cex.axis=fontSize,
                      main=title, xlab = tlab, ylab = "Population",
-                     type = "l", ylim = c(0, max(sim$N)),
+                     type = "l", ylim = ylim,
                      log = if (logScale) "y" else ""
                      )
             } else {
                 plot_time <- ggplot(sim,aes(time,N))+geom_line()+
                     labs(xlab=tlab,ylab="Population",main=title)
-                if (logScale) plot_time <- plot_time+scale_y_log10()
-                if (returnPlotList) {
+                if (logScale) {
+                    plot_time <- plot_time+scale_y_log10()
+                } else {
+                    ## if NOT log-scaled, expand the limits to include zero
+                    plot_time <- plot_time+expand_limits(y=0)
+                }
+                if (printPlots) {
+                    print(plot_time)
+                } else{
                     plotList <- c(plotList,
                                   namedList(plot_time))
-                } else print(plot_time)
+                } 
             }
         }
     }
 
-    if (returnPlotList) return(plotList)
+    if (!printPlots) return(plotList)
 
     ## return(data.frame(pop, b, d))
 }

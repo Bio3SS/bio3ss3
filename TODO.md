@@ -1,9 +1,7 @@
-* rationalize par("ask") behaviour (was turned on automatically; should be turned *on* by default if returnPlotList=FALSE (i.e. printing plots)
 * divOffset?
 * more documentation of models
 * integrate other models (theta-logistic, logistic)
 * stochastic models? (realized-r vs density plots?)
-* expand dynamics plots to allow zero
 * expand/collapse parameter table based on "allee' check box?
 * modularize more generally
 * print param info on plot
