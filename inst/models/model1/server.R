@@ -22,7 +22,7 @@ shinyServer(function(input, output) {
                     reportSim=(input$whichPlot=="plot_time"),
                     reportDiff=input$reportDiff,
                     fontSize=input$fSize,
-                    returnPlotList=TRUE)
+                    printPlots=FALSE)
         if(input$savePlot) {
             name <- paste0(input$filename, ".png")
             ggsave(name, plots[[input$whichPlot]], type="cairo-png")
