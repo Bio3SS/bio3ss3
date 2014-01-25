@@ -3,6 +3,11 @@
 #' run a model in the web browser with sliders etc.
 #' 
 #' @param modelName name of model to run
+#' @export
+#' @importFrom shiny runApp
+## don't actually need this here ...
+#' @importFrom tcltk tk_choose.dir
+
 runModel <- function(modelName="model1") {
     modelDir <-  system.file("models",modelName,package="bio3ss3")
     if (nchar(modelDir)==0)

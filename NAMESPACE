@@ -1,0 +1,6 @@
+export(bd)
+export(runModel)
+importFrom(deSolve,ode)
+importFrom(digest,digest)
+importFrom(shiny,runApp)
+importFrom(tcltk,tk_choose.dir)

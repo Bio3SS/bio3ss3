@@ -2,12 +2,11 @@
 \alias{bd}
 \title{basic one-species continuous-time population model}
 \usage{
-bd(N0 = NULL, MaxTime = 20, steps = 100, popMax = 100, popSteps = 100,
-  b0 = 1, bDD = NULL, bAllee = NULL, d0 = 0.5, dDD = NULL,
-  dAllee = NULL, reportPcTotal = "b", reportDiff = FALSE, title = "",
-  tlab = "Time (years)", plab = "Population size (number)",
-  logScale = FALSE, fontSize = 1, legendSize = 1, printPlots = TRUE,
-  plotType = "ggplot")
+bd(b0 = 1, bDD = NULL, bAllee = NULL, d0 = 0.5, dDD = NULL,
+  dAllee = NULL, N0 = 0, logScale = FALSE, MaxTime = 20, steps = 100,
+  popMax = 100, popSteps = 100, reportPcTotal = "b", reportDiff = FALSE,
+  title = "", tlab = "Time (years)", plab = "Population size (number)",
+  fontSize = 1, legendSize = 1, printPlots = TRUE, plotType = "ggplot")
 }
 \arguments{
   \item{MaxTime}{maximum time for dynamics plot [time]}

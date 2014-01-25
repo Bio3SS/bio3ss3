@@ -14,8 +14,6 @@
 ## * tweak graphics parameters: labels, sizes, min/max?
 ## * use analytic solution if available?
 
-theme_set(theme_bw())
-
 ## 
 namedList <- function(...) {
     L <- list(...)
@@ -114,6 +112,7 @@ ndot <- function(time, vars, parms){
 	list(c(ndot))
 }
 
+#' @importFrom deSolve ode
 popSim <- function (N0, MaxTime, steps, parms){
     sim <- as.data.frame(ode(
         y = c(n=log(N0)),
@@ -125,6 +124,7 @@ popSim <- function (N0, MaxTime, steps, parms){
     return(sim)
 }
 
+#' @importFrom digest digest
 addHash <- function(plotType="ggplot2",add=getOption("bdAddHash",TRUE),
                     size=4) {
     hash <- digest(paste(Sys.time(),tempfile(),Sys.getenv("USER")),"crc32")
@@ -168,21 +168,24 @@ addHash <- function(plotType="ggplot2",add=getOption("bdAddHash",TRUE),
 #' @param printPlots print plots (alternatively, return a list of plots)?
 #' @param plotType "ggplot2" or "base"
 #' @param logScale make y-axis logarithmic (for time dynamics only)?
-bd <- function(N0=NULL,
+#' @export
+bd <- function(b0=1, bDD=NULL, bAllee=NULL,
+               d0=0.5, dDD=NULL, dAllee=NULL,
+               N0=0,
+               logScale=FALSE,
                MaxTime=20, steps=100,
                popMax=100, popSteps=100,
-               b0=1, bDD=NULL, bAllee=NULL,
-               d0=0.5, dDD=NULL, dAllee=NULL,
                reportPcTotal="b",
                reportDiff=FALSE,
                title="",
                tlab = "Time (years)", plab="Population size (number)",
-               logScale=FALSE,
                fontSize=1,
                legendSize=1,
                printPlots=TRUE,
                plotType="ggplot"
                ) {
+
+    theme_set(theme_bw())
 
     ## Device ask should be true if device is interactive
     if (printPlots) {
