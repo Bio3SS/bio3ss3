@@ -1,3 +1,0 @@
-export(bd,runModel)
-importFrom(shiny,runApp)
-importFrom(deSolve,ode)

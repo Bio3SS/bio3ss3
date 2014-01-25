@@ -1,32 +1,40 @@
 theme_set(theme_bw())
 
-## server script
-## test:
-if (FALSE) {
-    input <- list(N0=1,b0=2,bDD=10,logScale=FALSE,
-                  reportDiff=FALSE,fontSize=1,
-                  whichPlot="plot_pc_demog",
-                  savePlot=FALSE)
-}
 
 shinyServer(function(input, output) {
+
+    currentplot <- NULL
+    
     output$plot <- renderPlot({
         ## cat(input$fSize,"\n")
         ## with(reactiveValuesToList(input),cat(b0,bDD,bAllee,"\n"))
+        ## BMB: could clean up slightly by using
+        ## a modified version of reactiveValuesToList(input)
+        ## as the input argument to bd ...
         plots <- bd(N0=input$N0,
                     b0=input$b0,
                     bDD=input$bDD,
                     bAllee=input$bAllee,
                     d0=input$d0,
                     logScale=input$logScale,
-                    reportSim=(input$whichPlot=="plot_time"),
                     reportDiff=input$reportDiff,
                     fontSize=input$fSize,
                     printPlots=FALSE)
-        if(input$savePlot) {
+        print(currentplot <<- plots[[input$whichPlot]])
+    })
+
+    observe({
+        if (input$printButton == 0)
+            return()
+        isolate({
             name <- paste0(input$filename, ".png")
-            ggsave(name, plots[[input$whichPlot]], type="cairo-png")
-        }
-        print(plots[[input$whichPlot]])
+            dir <- if (.Platform$OS.type=="windows") choose.dir() else {
+                tcltk::tk_choose.dir()
+            }
+            fp <- file.path(dir,name)
+            cat("Printing to ",fp,"\n")
+            ggsave(file=fp,
+                   plot=currentplot, type="cairo-png",width=5,height=5)
+        })
     })
 })

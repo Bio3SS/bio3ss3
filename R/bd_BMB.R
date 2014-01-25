@@ -14,9 +14,9 @@
 ## * tweak graphics parameters: labels, sizes, min/max?
 ## * use analytic solution if available?
 
-## Doesn't hurt the make project, helps people who are sourcing
 theme_set(theme_bw())
 
+## 
 namedList <- function(...) {
     L <- list(...)
     snm <- sapply(substitute(list(...)),deparse)[-1]
@@ -49,6 +49,7 @@ respPlot <- function(pop, b, d, lpos, ylab,
                col = c("blue", "black"),
                lty = c(1, 2)
                )
+        addHash("base")
     } else {
         if (!plotDiff) {
             b <- rep(b,length.out=length(pop))
@@ -63,8 +64,8 @@ respPlot <- function(pop, b, d, lpos, ylab,
                 geom_hline(yintercept=0,lty=2)
         }
         g0 <- g0 + geom_line()+scale_colour_brewer(name="",palette="Set1")+
-                    labs(x=plab,y=ylab,main=title)
-        g0 <- g0 + theme_set(theme_bw(base_size=12*fontSize))
+            labs(x=plab,y=ylab,main=title)
+        g0 <- g0 + theme_set(theme_bw(base_size=12*fontSize))+addHash("ggplot2")
         if (logscale) g0 + scale_y_log10() else g0
     }
 }
@@ -87,7 +88,7 @@ bdplots <- function(pop, b, d, reportTotal=FALSE,
         d <- d*pop
     }
 
-    ## FIXME:: not allowed in shiny
+    ## FIXME:: not allowed in shiny (but 'base' won't work with shiny anyway)
     if (plotType=="base") par(cex=1.6)
     respPlot(pop, b, d, lpos, ylab, title, fontSize=fontSize,
              legendSize=legendSize, plab=plab, plotType=plotType,
@@ -124,42 +125,58 @@ popSim <- function (N0, MaxTime, steps, parms){
     return(sim)
 }
 
+addHash <- function(plotType="ggplot2",add=getOption("bdAddHash",TRUE),
+                    size=4) {
+    hash <- digest(paste(Sys.time(),tempfile(),Sys.getenv("USER")),"crc32")
+    if (plotType=="base") {
+        if (add) {
+            u <- par("usr")
+            text(u[1],u[3],hash,adj=c(1,1))
+        }
+    } else {
+        if (add) {
+            ## cat("adding label\n")
+            return(annotate(geom="text",label=hash,x=-Inf,y=-Inf,
+                            hjust=-0.05,vjust=-0.05,size=size))
+        } else return(element_blank())
+    }
+    "abc"  ## test: should be discarded anyway
+}
+
 #' basic one-species continuous-time population model
 #'
 #' show plots of demographic parameters or time dynamics
 #' 
-#' @param N0 initial population size for dynamics plot
-#' @param MaxTime maximum time for dynamics plot
+#' @param MaxTime maximum time for dynamics plot [time]
 #' @param steps number of steps for dynamics plot
-#' @param popMax maximum population for demographic parameter plot
-#' @param b0 \emph{per capita} birth rate at zero density
-#' @param bDD characteristic density for exponential decrease in per capita birth rate with increasing population density
-#' @param bAllee characteristic scale for Allee effect in birth rate
-#' @param d0 \emph{per capita} death rate at zero density
-#' @param dDD characteristic density for exponential increase in \emph{per capita} death rate with increasing population density
-#' @param dAllee characteristic scale for Allee effect in death rate
+#' @param popMax maximum population for demographic parameter plot [number]
+#' @param popSteps number of steps for demographic parameter plot
+#' @param b0 \emph{per capita} birth rate at zero density [1/time]
+#' @param bDD characteristic density for exponential decrease in per capita birth rate with increasing population density [number]
+#' @param bAllee characteristic scale for Allee effect in birth rate [number]
+#' @param d0 \emph{per capita} death rate at zero density [1/time]
+#' @param dDD characteristic density for exponential increase in \emph{per capita} death rate with increasing population density [number]
+#' @param dAllee characteristic scale for Allee effect in death rate [number]
+#' @param N0 initial population size for dynamics plot [number]: if \code{N0}=0, simulations of time dynamics will not be run nor plotted
 #' @param reportPcTotal whether to plot \emph{per capita} rates ("p"), total rates ("t"), both ("b"), or neither ("n")
-#' @param reportSim whether to plot time dynamics
 #' @param reportDiff whether to plot the overall growth rate (birth-death) rather than birth and death separately
-#' @param popSteps ??
 #' @param fontSize scaled font size
 #' @param legendSize scaled legend size (base plots only)
-#' @param title
+#' @param title plot title
 #' @param tlab label for time axis
 #' @param plab label for population size axis
 #' @param printPlots print plots (alternatively, return a list of plots)?
 #' @param plotType "ggplot2" or "base"
-#' @param logScale make y-axis logarithmic (for time dynamics)?
+#' @param logScale make y-axis logarithmic (for time dynamics only)?
 bd <- function(N0=NULL,
                MaxTime=20, steps=100,
                popMax=100, popSteps=100,
                b0=1, bDD=NULL, bAllee=NULL,
                d0=0.5, dDD=NULL, dAllee=NULL,
                reportPcTotal="b",
-               reportSim=FALSE,
                reportDiff=FALSE,
                title="",
-               tlab = "Time (years)", plab="Population size",
+               tlab = "Time (years)", plab="Population size (number)",
                logScale=FALSE,
                fontSize=1,
                legendSize=1,
@@ -176,7 +193,7 @@ bd <- function(N0=NULL,
 
     plotList <- NULL
 
-    ## BMB: ???
+    ## construct pop vector
     pop <- 1:popSteps*(popMax/popSteps)
 
     b <- rfun(b0, bDD, bAllee, pop, TRUE)
@@ -203,42 +220,45 @@ bd <- function(N0=NULL,
                                     legendSize=legendSize, plab=plab,
                                     plotType=plotType,
                                     reportDiff=reportDiff)
-        if (printPlots) {print(plot_total_demog)
-                     } else {
-                         plotList <- c(plotList,
-                                       namedList(plot_total_demog))
-                     }
+        if (plotType=="ggplot") {
+            if (printPlots) {
+                print(plot_total_demog)
+            } else {
+                plotList <- c(plotList,
+                              namedList(plot_total_demog))
+            }
+        }
     }
 
-    if(!is.null(N0)){
+    if(N0>0) {
         sim <- bdsim(N0, MaxTime, steps, b0, bDD, bAllee, d0, dDD, dAllee)
         
-        if (reportSim) {
-            if (plotType=="base") {
-                ylim <- range(sim$N)
-                if (!logScale) ylim[1] <- 0
-                plot(sim$time, sim$N,
-                     cex.lab=fontSize, cex.axis=fontSize,
-                     main=title, xlab = tlab, ylab = "Population",
-                     type = "l", ylim = ylim,
-                     log = if (logScale) "y" else ""
-                     )
+        if (plotType=="base") {
+            ylim <- range(sim$N)
+            if (!logScale) ylim[1] <- 0
+            plot(sim$time, sim$N,
+                 cex.lab=fontSize, cex.axis=fontSize,
+                 main=title, xlab = tlab, ylab = "Population",
+                 type = "l", ylim = ylim,
+                 log = if (logScale) "y" else ""
+                 )
+            addHash("base")
+        } else {
+            plot_time <- ggplot(sim,aes(time,N))+geom_line()+
+                labs(xlab=tlab,ylab="Population",main=title)+
+                    addHash("ggplot2")
+            if (logScale) {
+                plot_time <- plot_time+scale_y_log10()
             } else {
-                plot_time <- ggplot(sim,aes(time,N))+geom_line()+
-                    labs(xlab=tlab,ylab="Population",main=title)
-                if (logScale) {
-                    plot_time <- plot_time+scale_y_log10()
-                } else {
-                    ## if NOT log-scaled, expand the limits to include zero
-                    plot_time <- plot_time+expand_limits(y=0)
-                }
-                if (printPlots) {
-                    print(plot_time)
-                } else{
-                    plotList <- c(plotList,
-                                  namedList(plot_time))
-                } 
+                ## if NOT log-scaled, expand the limits to include zero
+                plot_time <- plot_time+expand_limits(y=0)
             }
+            if (printPlots) {
+                print(plot_time)
+            } else{
+                plotList <- c(plotList,
+                              namedList(plot_time))
+            } 
         }
     }
 

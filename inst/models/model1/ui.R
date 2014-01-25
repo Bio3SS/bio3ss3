@@ -6,27 +6,27 @@ shinyUI(pageWithSidebar(
     ## Sidebar with a slider input for number of observations
     sidebarPanel(
         sliderInput("N0", 
-                    "Initial pop size", 
+                    "Initial pop size [number]", 
                     min = 0,
                     max = 100, 
                     value = 1),
         sliderInput("b0", 
-                    "birth rate at zero",
+                    "birth rate at zero [1/time]",
                     min = 0,
                     max = 10, 
                     value = 1),
         sliderInput("d0", 
-                    "death rate at zero",
+                    "death rate at zero [1/time]",
                     min = 0,
                     max = 10, 
                     value = 0.5),
         sliderInput("bDD", 
-                    "birth density-dependence", 
+                    "birth density-dependence [number]", 
                     min = 0,
                     max = 80, 
                     value = 40),
         sliderInput("bAllee", 
-                    "birth Allee effect", 
+                    "birth Allee effect [number]", 
                     min = 0,
                     max = 12, 
                     value = 0),
@@ -38,8 +38,8 @@ shinyUI(pageWithSidebar(
         checkboxInput('logScale', "Logarithmic y-axis"),
         sliderInput("fSize","Relative size",
                     min=0.5,max=3.5,value=1,step=0.1),
-        textInput('filename', "Filename"),
-        checkboxInput('savePlot', "Check to save", FALSE)
+        textInput('filename', "Filename",value="modelplot"),
+        actionButton("printButton","Print")
         ),
 
     ## Show a plot of the generated distribution
