@@ -9,12 +9,13 @@ Code for Bio 3SS3 at McMaster University.
 ```
 install.packages("devtools")
 library("devtools")
-install_github("bbolker","bio3ss3")
+install_github("bio3ss3",user="bbolker")
 ```
 * Or install from BB's repository:
 ```
 install.packages("bio3ss3",
-        repos="http://www.math.mcmaster.ca/bolker/R")
+           repos=c("http://www.math.mcmaster.ca/bolker/R",
+               getOption("repos","http://probability.ca/cran")))
 ```
 
 ### Basic usage
