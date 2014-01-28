@@ -3,13 +3,13 @@
 \title{basic one-species continuous-time population model}
 \usage{
 bd(b0 = 1, bDD = NULL, bAllee = NULL, d0 = 0.5, dDD = NULL,
-  dAllee = NULL, N0 = 0, logScale = FALSE, MaxTime = 20, steps = 100,
+  dAllee = NULL, N0 = 0, logScale = FALSE, timeMax = 20, steps = 100,
   popMax = 100, popSteps = 100, reportPcTotal = "b", reportDiff = FALSE,
   title = "", tlab = "Time (years)", plab = "Population size (number)",
   fontSize = 1, legendSize = 1, printPlots = TRUE, plotType = "ggplot")
 }
 \arguments{
-  \item{MaxTime}{maximum time for dynamics plot [time]}
+  \item{timeMax}{maximum time for dynamics plot [time]}
 
   \item{steps}{number of steps for dynamics plot}
 
@@ -70,5 +70,11 @@ bd(b0 = 1, bDD = NULL, bAllee = NULL, d0 = 0.5, dDD = NULL,
 }
 \description{
 show plots of demographic parameters or time dynamics
+}
+\examples{
+bd()     ## basic plot
+## set initial population size to something other than 0
+## in order to get a dynamics plot
+bd(N0=1)
 }
 

@@ -4,7 +4,6 @@ Version: 0.0.3
 Author: Ben Bolker and Jonathan Dushoff
 Maintainer: Ben Bolker <bolker@mcmaster.ca>
 Depends:
-    R (>= 3.0.0),
     ggplot2
 Imports:
     shiny,

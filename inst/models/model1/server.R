@@ -11,11 +11,13 @@ shinyServer(function(input, output) {
         ## BMB: could clean up slightly by using
         ## a modified version of reactiveValuesToList(input)
         ## as the input argument to bd ...
-        plots <- bd(N0=input$N0,
-                    b0=input$b0,
+        plots <- bd(b0=input$b0,
                     bDD=input$bDD,
                     bAllee=input$bAllee,
                     d0=input$d0,
+                    N0=input$N0,
+                    timeMax=input$timeMax,
+                    steps=input$timeSteps,
                     logScale=input$logScale,
                     reportDiff=input$reportDiff,
                     fontSize=input$fSize,

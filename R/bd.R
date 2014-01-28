@@ -113,10 +113,10 @@ ndot <- function(time, vars, parms){
 }
 
 #' @importFrom deSolve ode
-popSim <- function (N0, MaxTime, steps, parms){
+popSim <- function (N0, timeMax, steps, parms){
     sim <- as.data.frame(ode(
         y = c(n=log(N0)),
-        times = (0:steps)*MaxTime/steps,
+        times = (0:steps)*timeMax/steps,
         func = ndot,
         parms
 	))
@@ -147,7 +147,7 @@ addHash <- function(plotType="ggplot2",add=getOption("bdAddHash",TRUE),
 #'
 #' show plots of demographic parameters or time dynamics
 #' 
-#' @param MaxTime maximum time for dynamics plot [time]
+#' @param timeMax maximum time for dynamics plot [time]
 #' @param steps number of steps for dynamics plot
 #' @param popMax maximum population for demographic parameter plot [number]
 #' @param popSteps number of steps for demographic parameter plot
@@ -168,12 +168,17 @@ addHash <- function(plotType="ggplot2",add=getOption("bdAddHash",TRUE),
 #' @param printPlots print plots (alternatively, return a list of plots)?
 #' @param plotType "ggplot2" or "base"
 #' @param logScale make y-axis logarithmic (for time dynamics only)?
+#' @examples
+#' bd()     ## basic plot
+#' ## set initial population size to something other than 0
+#' ## in order to get a dynamics plot
+#' bd(N0=1) 
 #' @export
 bd <- function(b0=1, bDD=NULL, bAllee=NULL,
                d0=0.5, dDD=NULL, dAllee=NULL,
                N0=0,
                logScale=FALSE,
-               MaxTime=20, steps=100,
+               timeMax=20, steps=100,
                popMax=100, popSteps=100,
                reportPcTotal="b",
                reportDiff=FALSE,
@@ -234,7 +239,7 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
     }
 
     if(N0>0) {
-        sim <- bdsim(N0, MaxTime, steps, b0, bDD, bAllee, d0, dDD, dAllee)
+        sim <- bdsim(N0, timeMax, steps, b0, bDD, bAllee, d0, dDD, dAllee)
         
         if (plotType=="base") {
             ylim <- range(sim$N)
@@ -270,10 +275,10 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
     ## return(data.frame(pop, b, d))
 }
 
-bdsim <- function(N0=1, MaxTime=20, steps=100, b0=1, bDD=NULL,
+bdsim <- function(N0=1, timeMax=20, steps=100, b0=1, bDD=NULL,
                   bAllee=NULL, d0=0.5, dDD=NULL, dAllee=NULL){
     parms = list(b0=b0, bDD=bDD, bAllee=bAllee, d0=d0, dDD=dDD, dAllee=dAllee)
-    return(popSim(N0, MaxTime, steps, parms))
+    return(popSim(N0, timeMax, steps, parms))
 }
 
 
