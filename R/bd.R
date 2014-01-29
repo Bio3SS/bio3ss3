@@ -29,7 +29,8 @@ respPlot <- function(pop, b, d, lpos, ylab,
                      logscale=FALSE,
                      legendSize=1,
                      fontSize=1,
-                     plotType="ggplot"){
+                     plotType="ggplot",
+                     bw=FALSE){
     ymin <- ifelse(logscale, min(c(b, d)), 0)
     ymax <- max(c(b,min(d)))
     logPar <- ifelse(logscale, "y", "")
@@ -61,8 +62,10 @@ respPlot <- function(pop, b, d, lpos, ylab,
             g0 <- ggplot(dd,aes(pop,y))+
                 geom_hline(yintercept=0,lty=2)
         }
-        g0 <- g0 + geom_line()+scale_colour_brewer(name="",palette="Set1")+
-            labs(x=plab,y=ylab,main=title)
+        g0 <- g0 + geom_line()+labs(x=plab,y=ylab,main=title)
+        g0 <- g0 + if (bw) {
+            scale_linetype_discrete()
+        } else scale_colour_brewer(name="",palette="Set1")+
         g0 <- g0 + theme_set(theme_bw(base_size=12*fontSize))+addHash("ggplot2")
         if (logscale) g0 + scale_y_log10() else g0
     }
@@ -72,7 +75,7 @@ bdplots <- function(pop, b, d, reportTotal=FALSE,
                     reportDiff = FALSE,
                     title=NULL,
                     fontSize=1, legendSize, plab,
-                    plotType="ggplot") {
+                    plotType="ggplot",...) {
 
     if (is.null(title))
         title <- if (!reportDiff) "Birth-death plot" else "Growth rate plot"
@@ -90,7 +93,7 @@ bdplots <- function(pop, b, d, reportTotal=FALSE,
     if (plotType=="base") par(cex=1.6)
     respPlot(pop, b, d, lpos, ylab, title, fontSize=fontSize,
              legendSize=legendSize, plab=plab, plotType=plotType,
-             plotDiff=reportDiff)
+             plotDiff=reportDiff,...)
 }
 
 ## BMB: changed default divOffset to 0
@@ -187,7 +190,8 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
                fontSize=1,
                legendSize=1,
                printPlots=TRUE,
-               plotType="ggplot"
+               plotType="ggplot",
+               ...
                ) {
 
     theme_set(theme_bw())
@@ -212,7 +216,7 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
                                  title, fontSize=fontSize, 
                                  legendSize=legendSize, plab=plab,
                                  plotType=plotType,
-                                 reportDiff=reportDiff)
+                                 reportDiff=reportDiff,...)
         if (plotType=="ggplot") {
             if (printPlots) {
                 print(plot_pc_demog)
@@ -227,7 +231,8 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
                                     fontSize=fontSize, 
                                     legendSize=legendSize, plab=plab,
                                     plotType=plotType,
-                                    reportDiff=reportDiff)
+                                    reportDiff=reportDiff,
+                                    ...)
         if (plotType=="ggplot") {
             if (printPlots) {
                 print(plot_total_demog)
