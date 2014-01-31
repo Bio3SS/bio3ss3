@@ -51,21 +51,23 @@ respPlot <- function(pop, b, d, lpos, ylab,
         addHash("base")
     } else {
         if (!plotDiff) {
+            ## plot birth & death separately
             b <- rep(b,length.out=length(pop))
             d <- rep(d,length.out=length(pop))
             dd <- data.frame(pop=rep(pop,2),y=c(b,d),
                              lab=rep(c("birth rate","death rate"),
                              each=length(pop)))
-            g0 <- ggplot(dd,aes(pop,y,colour=lab))
+            g0 <- if (bw) ggplot(dd,aes(pop,y,linetype=lab))+
+                scale_linetype_discrete(name="")
+            else ggplot(dd,aes(pop,y,colour=lab))+ 
+                scale_colour_brewer(name="",palette="Set1")
+        
         } else {
             dd <- data.frame(pop,y=b-d)
             g0 <- ggplot(dd,aes(pop,y))+
                 geom_hline(yintercept=0,lty=2)
         }
         g0 <- g0 + geom_line()+labs(x=plab,y=ylab,main=title)
-        g0 <- g0 + if (bw) {
-            scale_linetype_discrete()
-        } else scale_colour_brewer(name="",palette="Set1")+
         g0 <- g0 + theme_set(theme_bw(base_size=12*fontSize))+addHash("ggplot2")
         if (logscale) g0 + scale_y_log10() else g0
     }
@@ -171,6 +173,10 @@ addHash <- function(plotType="ggplot2",add=getOption("bdAddHash",TRUE),
 #' @param printPlots print plots (alternatively, return a list of plots)?
 #' @param plotType "ggplot2" or "base"
 #' @param logScale make y-axis logarithmic (for time dynamics only)?
+#' @param \dots additional arguments passed down to plotting functions, including \code{bw} for black-and-white plotting
+#' @details The basic model considered here is an exponential-density-dependence model, i.e.
+#' \deqn{\frac{dN}{dt} = N (b_0 \exp(-N/b_{DD}) - d_0 \exp(N/d_{DD}))}
+#' (more details to be added later)
 #' @examples
 #' bd()     ## basic plot
 #' ## set initial population size to something other than 0
