@@ -68,7 +68,8 @@ respPlot <- function(pop, b, d, lpos, ylab,
                 geom_hline(yintercept=0,lty=2)
         }
         g0 <- g0 + geom_line()+labs(x=plab,y=ylab,main=title)
-        g0 <- g0 + theme_set(theme_bw(base_size=12*fontSize))+addHash("ggplot2")
+        ## FIXME:: really shouldn't hard-code theme_bw ...
+        g0 <- g0 + theme_bw(base_size=12*fontSize)+addHash("ggplot2")
         if (logscale) g0 + scale_y_log10() else g0
     }
 }
