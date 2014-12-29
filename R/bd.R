@@ -14,7 +14,7 @@
 ## * tweak graphics parameters: labels, sizes, min/max?
 ## * use analytic solution if available?
 
-## 
+##' utility function
 namedList <- function(...) {
     L <- list(...)
     snm <- sapply(substitute(list(...)),deparse)[-1]
@@ -223,6 +223,8 @@ addHash <- function(plotType="ggplot2",add=getOption("bdAddHash",TRUE),
 #' @param reportDiff whether to plot the overall growth rate (birth-death) rather than birth and death separately
 #' @param fontSize scaled font size
 #' @param legendSize scaled legend size (base plots only)
+#' @param cobweb (logical) draw cobweb diagram?
+#' @param discrete (logical) discrete-time model?
 #' @param title plot title
 #' @param tlab label for time axis
 #' @param plab label for population size axis
@@ -257,6 +259,9 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
                plotType="ggplot",
                ...
                ) {
+
+    ## make R CMD check happy:
+    N <- value <- variable <- X1 <- y <- lab <- NULL  
 
     theme_set(theme_bw())
 

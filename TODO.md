@@ -1,3 +1,4 @@
+* finish roxygenizing
 * get printing done in a sensible place (use tk_choose.dir or choose.dir depending on platform?  store original working directory??  completely separate print dialog?
 * add textual info to plot, e.g. putting text in upper right corner can be done by `annotate(geom="text",x=Inf,y=Inf,label=<whatever>,hjust=1,vjust=1)`
     * print param info on plot
@@ -8,7 +9,6 @@
 * show stability info, equilibria?
 * integrate other models (theta-logistic, logistic): different parameter sets vis ?conditionalPanel
 * expand/collapse parameter table based on "allee' check box?: see ?conditionalPanel
-* more generally,
 * remove divOffset offset chunk
 
 ## Done

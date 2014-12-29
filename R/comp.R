@@ -1,11 +1,3 @@
-##' utility function
-namedList <- function(...) {
-    L <- list(...)
-    snm <- sapply(substitute(list(...)),deparse)[-1]
-    if (is.null(nm <- names(L))) nm <- snm
-    if (any(nonames <- nm=="")) nm[nonames] <- snm[nonames]
-    setNames(L,nm)
-}
 
 pred <- function(...) {
     comp(...,type="pred")
@@ -18,6 +10,10 @@ comp <- function(r=c(1,1),K=c(1,1),alpha=c(0,0),
                  r.V=1,K.V=Inf,b=1,c=1,d.P=0.5,alpha.P=0,h=0,
                  t.max=50,t.steps=200,
                  arrow.pos=0.05,debug=FALSE) {
+
+    ## make R CMD check happy:
+    N <- value <- variable <- X1 <- y <- lab <- NULL  
+
     type <- match.arg(type)
     if (debug) cat("in comp\n")
     if (type=="comp") {

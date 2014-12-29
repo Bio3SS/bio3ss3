@@ -38,7 +38,7 @@ mkShinyServer <- function(fun,argList,
                 }
                 fp <- file.path(dir,name)
                 cat("Printing to ",fp,"\n")
-                ggsave(file=fp,
+                ggsave(filename=fp,
                        plot=currentplot, type="cairo-png",width=5,height=5)
             })
         })
