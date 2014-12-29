@@ -1,6 +1,5 @@
 theme_set(theme_bw())
 
-
 shinyServer(function(input, output) {
 
     currentplot <- NULL
@@ -21,6 +20,8 @@ shinyServer(function(input, output) {
                     logScale=input$logScale,
                     reportDiff=input$reportDiff,
                     fontSize=input$fSize,
+                    discrete=input$discrete_time,
+                    cobweb=input$do_cobweb,
                     printPlots=FALSE)
         print(currentplot <<- plots[[input$whichPlot]])
     })

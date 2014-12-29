@@ -23,6 +23,28 @@ namedList <- function(...) {
     setNames(L,nm)
 }
 
+cobweb3 <- function(g0,pop) {
+    nt <- length(pop)
+    g0 <- g0+annotate(geom="segment",
+                      x=pop[1:(nt-1)],
+                      xend=pop[1:(nt-1)],
+                      y=pop[1:(nt-1)],
+                      yend=pop[2:nt],
+                      colour="red")+
+                          annotate(geom="segment",
+                                   x=pop[1:(nt-1)],
+                                   xend=pop[2:nt],
+                                   y=pop[2:nt],
+                                   yend=pop[2:nt],
+                                   colour="blue")+
+                                       annotate(geom="segment",
+                                                x=pop[1],
+                                                xend=pop[1],
+                                                y=0,
+                                                yend=pop[1],
+                                                colour="red")
+}
+
 respPlot <- function(pop, b, d, lpos, ylab,
                      plab="Population size", title="",
                      plotDiff=FALSE,
@@ -30,6 +52,9 @@ respPlot <- function(pop, b, d, lpos, ylab,
                      legendSize=1,
                      fontSize=1,
                      plotType="ggplot",
+                     discrete=FALSE,
+                     cobweb=FALSE,
+                     reportTotal=FALSE,
                      bw=FALSE){
     ymin <- ifelse(logscale, min(c(b, d)), 0)
     ymax <- max(c(b,min(d)))
@@ -61,11 +86,16 @@ respPlot <- function(pop, b, d, lpos, ylab,
                 scale_linetype_discrete(name="")
             else ggplot(dd,aes(pop,y,colour=lab))+ 
                 scale_colour_brewer(name="",palette="Set1")
-        
         } else {
             dd <- data.frame(pop,y=b-d)
-            g0 <- ggplot(dd,aes(pop,y))+
-                geom_hline(yintercept=0,lty=2)
+            g0 <- ggplot(dd,aes(pop,y))
+            if (!discrete) {
+                g0 <- g0 + geom_hline(yintercept=0,lty=2)
+            } else {
+                g0 <- g0 + if (reportTotal) 
+                    geom_abline(intercept=0,slope=1,lty=2)
+                else geom_hline(yintercept=1,lty=2)
+            }
         }
         g0 <- g0 + geom_line()+labs(x=plab,y=ylab,main=title)
         ## FIXME:: really shouldn't hard-code theme_bw ...
@@ -76,6 +106,8 @@ respPlot <- function(pop, b, d, lpos, ylab,
 
 bdplots <- function(pop, b, d, reportTotal=FALSE,
                     reportDiff = FALSE,
+                    discrete = FALSE,
+                    cobweb = FALSE,
                     title=NULL,
                     fontSize=1, legendSize, plab,
                     plotType="ggplot",...) {
@@ -86,7 +118,7 @@ bdplots <- function(pop, b, d, reportTotal=FALSE,
     lpos <- "topright"
     
     if(reportTotal) {
-        ylab <- "Total rate (pop/t)"
+        ylab <- if (discrete) "N(t+1)" else "Total rate (pop/t)"
         lpos <- "bottomright"
         b <- b*pop
         d <- d*pop
@@ -96,39 +128,62 @@ bdplots <- function(pop, b, d, reportTotal=FALSE,
     if (plotType=="base") par(cex=1.6)
     respPlot(pop, b, d, lpos, ylab, title, fontSize=fontSize,
              legendSize=legendSize, plab=plab, plotType=plotType,
-             plotDiff=reportDiff,...)
+             discrete=discrete,
+             cobweb=cobweb,
+             plotDiff=reportDiff,
+             reportTotal=reportTotal,
+             ...)
 }
 
 ## BMB: changed default divOffset to 0
-rfun <- function(r0, DD, Allee, pop, birth=TRUE, divOffset=0, mmax=1000){
-    mult <- 1 + 0*pop
+rfun <- function(r0, DD, Allee, pop, birth=TRUE, divOffset=0, mmax=NULL,
+                 pow.Allee=1){
+    mult <- 1 + 0*pop  ## no-op?
     if (!is.null(DD)) mult <- mult*exp(pop/DD)
     if (!is.null(Allee))
-        mult <- mult*exp((Allee+divOffset)/(pop+divOffset))
-    mult <- mmax*mult/(mmax+mult)
+        mult <- mult*exp((Allee^pow.Allee+divOffset)/(pop+divOffset))
+    if (!is.null(mmax)) {
+        mult <- mmax*mult/(mmax+mult)
+    }
     if (birth) {mult <- 1/mult}
     return(r0*mult)
 }
 
 ndot <- function(time, vars, parms){
-	ndot <- with(as.list(c(vars, parms)),
-		rfun(b0, bDD, bAllee, exp(n), TRUE) 
-                     - rfun(d0, dDD, dAllee, exp(n), FALSE) 
-	)
-	list(c(ndot))
+    ndot <- with(as.list(c(vars, parms)), {
+        b <- rfun(b0, bDD, bAllee, exp(n), TRUE) 
+        d <- rfun(d0, dDD, dAllee, exp(n), FALSE)
+        b-d
+    })
+    list(c(ndot))
+}
+
+dndot <- function(time, vars, parms){
+    ndot <- with(as.list(c(vars, parms)), {
+        b <- rfun(b0, bDD, bAllee, exp(n), TRUE) 
+        d <- rfun(d0, dDD, dAllee, exp(n), FALSE)
+        b+(1-d)
+    })
+    list(log(ndot)+vars)
 }
 
 #' @importFrom deSolve ode
-popSim <- function (N0, timeMax, steps, parms){
+popSim <- function (N0, timeMax, steps, parms, discrete=FALSE) {
+    method <- if (discrete) "iteration" else "lsoda"
     sim <- as.data.frame(ode(
         y = c(n=log(N0)),
         times = (0:steps)*timeMax/steps,
-        func = ndot,
-        parms
+        func = if (discrete) dndot else ndot,
+        parms, method=method
 	))
     sim$N <- exp(sim$n)
     return(sim)
 }
+
+## p0 <- list(b0=2, bDD=2, d0=1, dDD=NULL,
+##                      bAllee=NULL, dAllee=NULL)
+## popSim(1,20,20, p0, method="lsoda")
+## ndot(0,c(n=5),p0)
 
 #' @importFrom digest digest
 addHash <- function(plotType="ggplot2",add=getOption("bdAddHash",TRUE),
@@ -192,6 +247,8 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
                popMax=100, popSteps=100,
                reportPcTotal="b",
                reportDiff=FALSE,
+               discrete=FALSE,
+               cobweb=FALSE,
                title="",
                tlab = "Time (years)", plab="Population size (number)",
                fontSize=1,
@@ -215,21 +272,28 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
     ## construct pop vector
     pop <- 1:popSteps*(popMax/popSteps)
 
-    b <- rfun(b0, bDD, bAllee, pop, TRUE)
-    d <- rfun(d0, dDD, dAllee, pop, FALSE)
+    if (!discrete) {
+        b <- rfun(b0, DD=bDD, Allee=bAllee, pop=pop, birth=TRUE)
+        d <- rfun(d0, DD=dDD, Allee=dAllee, pop=pop, birth=FALSE)
+    } else {
+        b <- rfun(b0, DD=bDD, Allee=bAllee, pop=pop, birth=TRUE, mmax=NULL)
+        d <- -1+rfun(d0, DD=dDD, Allee=dAllee, pop=pop, birth=FALSE, mmax=NULL)
+    }
 
     if (reportPcTotal == "p" || reportPcTotal == "b") {
         plot_pc_demog <- bdplots(pop, b, d, reportTotal=FALSE,
                                  title, fontSize=fontSize, 
                                  legendSize=legendSize, plab=plab,
                                  plotType=plotType,
+                                 discrete=discrete,
                                  reportDiff=reportDiff,...)
         if (plotType=="ggplot") {
             if (printPlots) {
                 print(plot_pc_demog)
-            } else { plotList <- c(plotList,
-                                   namedList(plot_pc_demog))
-                 }
+            } else {
+                plotList <- c(plotList,
+                              namedList(plot_pc_demog))
+            }
         }
     }
     
@@ -238,8 +302,14 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
                                     fontSize=fontSize, 
                                     legendSize=legendSize, plab=plab,
                                     plotType=plotType,
+                                    discrete=discrete,
                                     reportDiff=reportDiff,
                                     ...)
+        if (cobweb && discrete && N0>0) {
+            sim <- bdsim(N0, timeMax, steps, b0, bDD, bAllee, d0, dDD, dAllee,
+                         discrete=discrete)
+            plot_total_demog <- cobweb3(plot_total_demog,sim[,"N"])
+        }
         if (plotType=="ggplot") {
             if (printPlots) {
                 print(plot_total_demog)
@@ -251,7 +321,8 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
     }
 
     if(N0>0) {
-        sim <- bdsim(N0, timeMax, steps, b0, bDD, bAllee, d0, dDD, dAllee)
+        sim <- bdsim(N0, timeMax, steps, b0, bDD, bAllee, d0, dDD, dAllee,
+                     discrete=discrete)
         
         if (plotType=="base") {
             ylim <- range(sim$N)
@@ -266,7 +337,7 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
         } else {
             plot_time <- ggplot(sim,aes(time,N))+geom_line()+
                 labs(xlab=tlab,ylab="Population",main=title)+
-                    addHash("ggplot2")
+                    addHash("ggplot2")+theme_bw(base_size=12*fontSize)
             if (logScale) {
                 plot_time <- plot_time+scale_y_log10()
             } else {
@@ -288,9 +359,10 @@ bd <- function(b0=1, bDD=NULL, bAllee=NULL,
 }
 
 bdsim <- function(N0=1, timeMax=20, steps=100, b0=1, bDD=NULL,
-                  bAllee=NULL, d0=0.5, dDD=NULL, dAllee=NULL){
+                  bAllee=NULL, d0=0.5, dDD=NULL, dAllee=NULL,
+                  discrete=FALSE) {
     parms = list(b0=b0, bDD=bDD, bAllee=bAllee, d0=d0, dDD=dDD, dAllee=dAllee)
-    return(popSim(N0, timeMax, steps, parms))
+    return(popSim(N0, timeMax, steps, parms, discrete))
 }
 
 
