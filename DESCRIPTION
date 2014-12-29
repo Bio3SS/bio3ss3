@@ -1,6 +1,6 @@
 Package: bio3ss3
 Title: R stuff for Biology 3SS3 @ McMaster
-Version: 0.0.6
+Version: 0.0.7
 Author: Ben Bolker and Jonathan Dushoff
 Maintainer: Ben Bolker <bolker@mcmaster.ca>
 Depends:
@@ -13,6 +13,5 @@ Imports:
     grid,
     plyr,
     reshape2
-Description: R stuff for Biology 3SS3 (Population Ecology) at McMaster
-    University
+Description: R stuff for Biology 3SS3 (Population Ecology) at McMaster University
 License: GPL

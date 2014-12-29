@@ -43,4 +43,4 @@ bd0 <- function(timeMax=20,steps=50,N0=1,parms=c(b0=1,d0=0.5,bDD=10)) {
         bdfun0,                                 ## gradient function
         parms)                                  ## parameters
 }
-bd0()
+## bd0()
