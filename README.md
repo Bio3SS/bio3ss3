@@ -7,9 +7,9 @@ Code for Bio 3SS3 at McMaster University.
 
 * Either via `devtools::install_github()`:
 ```
-install.packages("devtools")
+install.packages("devtools") ## if not already installed
 library("devtools")
-install_github("bio3ss3",user="bbolker")
+install_github("bbolker/bio3ss3")
 library("bio3ss3")
 ```
 * Or install from BB's repository:
