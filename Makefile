@@ -16,6 +16,8 @@ include stuff.mk
 
 ## Content
 
+# noscrapea
+
 reinstall:
 	R CMD build .
 	R CMD check <tarball>
